@@ -1,7 +1,7 @@
 # ValetonMidiRouter
 project using USB host shield library, adapted to use with valeton gp200Lt (or another device that can send Usb Midi)
 
-[![](https://github.com/felis/USB_Host_Shield_2.0/workflows/CI/badge.svg)](https://github.com/felis/USB_Host_Shield_2.0/actions?query=branch%3Amaster)
+[!](https://github.com/felis/USB_Host_Shield_2.0/workflows/CI/badge.svg)](https://github.com/felis/USB_Host_Shield_2.0/actions?query=branch%3Amaster)
 
 #Summary
 USB Midi Router using USB Host Shield Library
