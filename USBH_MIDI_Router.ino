@@ -1,15 +1,14 @@
 /*
- *******************************************************************************
- * USB-MIDI dump utility
- * Copyright (C) 2013-2021 Yuuichi Akagawa
- *
- * for use with USB Host Shield 2.0 from Circuitsathome.com
- * https://github.com/felis/USB_Host_Shield_2.0
- *
- * This is sample program. Do not expect perfect behavior.
- *******************************************************************************
- */
+  USB Midi Router using USB Host Shield Library
+  Using usb HUB with 3 devices (1 sender and 2 receiver)
 
+  When there is any midi control change/ program change, the command 
+  will be sent to all other devices
+
+  The function onInit1, onInit2 and onInit3 is useful to check the USB adress
+  and set what Usb port will be the sender device, not depending from
+  Midi instances
+*/
 #include <usbh_midi.h>
 #include <usbhub.h>
 
