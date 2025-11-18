@@ -16,8 +16,10 @@ USB Usb;
 USBHub Hub(&Usb);
 USBH_MIDI Midi(&Usb);
 USBH_MIDI Midi1(&Usb);
+USBH_MIDI Midi2(&Usb);
 
 void MIDI_poll();
+bool noMidiMessageSent = false;
 
 void onInit() {
   char buf[40];
@@ -39,6 +41,20 @@ void onInit1() {
   Serial.println("Midi1_____________________________");
 }
 
+void onInit2() {
+  char buf[40];
+  uint16_t vid = Midi2.idVendor();
+  uint16_t pid = Midi2.idProduct();
+  uint16_t add = Midi2.GetAddress();
+  sprintf(buf, "VID:%04X, PID:%04X, ADDR:%02X", vid, pid, add);
+  Serial.println(buf);
+  Serial.println("Midi2_____________________________");
+}
+
+void onRelease() {
+  noMidiMessageSent = false;
+}
+
 void setup() {
   Serial.begin(115200);
   //pinMode(LED_BUILTIN, OUTPUT);
@@ -55,12 +71,19 @@ void setup() {
   // Register onInit() function
   Midi.attachOnInit(onInit);
   Midi1.attachOnInit(onInit1);
+  Midi2.attachOnInit(onInit2);
+
+  Midi.attachOnRelease(onRelease);
+  Midi1.attachOnRelease(onRelease);
+  Midi2.attachOnRelease(onRelease);
+
+
   Serial.println("Going to loop()");
 }
 
 void loop() {
   Usb.Task();
-  if (Midi) {
+  if (Midi || Midi1 || Midi2) {
     MIDI_poll();
   }
 }
@@ -94,6 +117,10 @@ void MIDI_poll() {
           if (Midi1) {
             Midi1.SendData(message);
           }
+
+          if (Midi2) {
+            Midi2.SendData(message);
+          }
         }
       }
 
@@ -126,6 +153,10 @@ void MIDI_poll() {
           if (Midi) {
             Midi.SendData(message);
           }
+
+          if (Midi2) {
+            Midi2.SendData(message);
+          }
         }
       }
 
@@ -136,7 +167,46 @@ void MIDI_poll() {
         Serial.println("Sender is Midi1");
       }
     }
+  } else if (Midi2.GetAddress() == 0x0A) {
+    if (Midi2.RecvData(&rcvd, bufMidi) == 0) {
+      uint32_t time = (uint32_t)millis();
+      sprintf(buf, "%04X%04X:%3d:", (uint16_t)(time >> 16), (uint16_t)(time & 0xFFFF), rcvd);  // Split variable to prevent warnings on the ESP8266 platform
+      Serial.print(buf);
+
+      for (int i = 0; i < 8; i++) {
+        //for (int i = 0; i < 8; i++) {
+        /*sprintf(buf, " %02X", bufMidi[i]);
+      Serial.print(buf);*/
+        Serial.print(bufMidi[i], HEX);
+        Serial.print(" ");
+        if (((bufMidi[i] >> 4) == 0xC) || ((bufMidi[i] >> 4) == 0xB)) {
+          message[0] = bufMidi[i];
+          message[1] = bufMidi[i + 1];
+          if ((bufMidi[i] >> 4) == 0xB) {
+            message[2] = bufMidi[i + 2];
+          }
+
+          if (Midi) {
+            Midi.SendData(message);
+          }
+
+          if (Midi1) {
+            Midi1.SendData(message);
+          }
+        }
+      }
+
+      Serial.println("");
+      if (!Midi) {
+        Serial.println("No Midi Connected!");
+      } else {
+        Serial.println("Sender is Midi2");
+      }
+    }
   } else {
-    Serial.println("Main Midi no Connected");
+    if (!noMidiMessageSent) {
+      Serial.println("Main Midi no Connected");
+      noMidiMessageSent = true;
+    }
   }
 }
